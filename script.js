@@ -429,6 +429,58 @@
     ).join("");
   }
 
+  /* ---------------- informações para impressão/PDF ---------------- */
+  function renderPrintDetails(tasks, chart){
+    const printDetails = $("#printDetails");
+    if(!printDetails) return;
+
+    if(!tasks || tasks.length===0){
+      printDetails.innerHTML = "";
+      return;
+    }
+
+    const sorted = [...tasks].sort((a,b)=> parseDateTime(a)-parseDateTime(b));
+    printDetails.innerHTML = `
+      <h2>Informações das atividades</h2>
+      <table class="print-details-table">
+        <thead>
+          <tr>
+            <th>Atividade</th>
+            <th>Componentes envolvidos</th>
+            <th>Tipo de manutenção</th>
+            <th>Responsável</th>
+            <th>Período previsto</th>
+            <th>Prazo de entrega</th>
+            <th>Progresso</th>
+            <th>Situação</th>
+            <th>Depende de</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sorted.map(t=>{
+            const status = computeStatus(t);
+            const type = typeOf(t.color);
+            const s = parseDateTime(t);
+            const e = endDateTime(t);
+            const dep = t.dependency ? chart.tasks.find(x=>x.id===t.dependency) : null;
+            const components = componentList(t).join(", ") || "—";
+            const deadline = t.deadline ? fmtBRFull(parseDate(t.deadline)) : "Fim previsto: "+fmtBR(e);
+            return `<tr>
+              <td>${escapeHtml(t.name)}</td>
+              <td>${escapeHtml(components)}</td>
+              <td>${escapeHtml(type.label)}</td>
+              <td>${escapeHtml(t.responsible || "—")}</td>
+              <td>${fmtDateTimeShort(s)} – ${fmtDateTimeShort(e)}</td>
+              <td>${escapeHtml(deadline)}</td>
+              <td>${Number(t.progress)||0}%</td>
+              <td>${escapeHtml((STATUS_META[status] || {}).label || status)}</td>
+              <td>${escapeHtml(dep ? dep.name : "Nenhuma atividade")}</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>`;
+  }
+
   /* ---------------- Gantt ---------------- */
   function getRange(tasks){
     if(tasks.length===0){
@@ -470,6 +522,7 @@
     ganttRoot.innerHTML = "";
     const printTitle = $("#printTitle");
     printTitle.innerHTML = escapeHtml(chart.name) + "<span>Gerado em " + fmtBRFull(new Date()) + "</span>";
+    renderPrintDetails(filteredTasks, chart);
 
     if(chart.tasks.length===0){
       const empty = document.createElement("div");
@@ -707,6 +760,7 @@
       renderList(filtered, chart);
       const printTitle = $("#printTitle");
       printTitle.innerHTML = escapeHtml(chart.name) + "<span>Gerado em " + fmtBRFull(new Date()) + "</span>";
+      renderPrintDetails(filtered, chart);
     }
   }
 
@@ -723,3 +777,38 @@
   resetForm();
   renderAll();
 })();
+
+function exportarPDF() {
+  const elemento = document.getElementById('seu-container-do-cronograma'); // Substitua pelo ID da sua tabela/gantt
+
+  // Salva os estilos originais
+  const estiloOriginalOverflow = elemento.style.overflow;
+  const estiloOriginalWidth = elemento.style.width;
+
+  // Força o contêiner a mostrar todo o conteúdo sem barras de rolagem
+  elemento.style.overflow = 'visible';
+  elemento.style.width = 'auto';
+
+  const opcoes = {
+    margin: [10, 10, 10, 10],
+    filename: 'cronograma-manutencao.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { 
+      scale: 2,           // Melhora a resolução do PDF
+      scrollX: 0, 
+      scrollY: 0,
+      useCORS: true 
+    },
+    jsPDF: { 
+      unit: 'mm', 
+      format: 'a4', 
+      orientation: 'landscape' // Define orientação Paisagem para caber todas as colunas
+    }
+  };
+
+  // Gera o PDF e restaura a tela original
+  html2pdf().set(opcoes).from(elemento).save().then(() => {
+    elemento.style.overflow = estiloOriginalOverflow;
+    elemento.style.width = estiloOriginalWidth;
+  });
+}
