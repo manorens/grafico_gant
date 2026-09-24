@@ -36,7 +36,11 @@
   const MONTHS = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
   const BAR_FONT = "600 11px 'Inter', Arial, sans-serif";
   const ROW_HEIGHT = 62;
-  const BASE_DAY_WIDTH = 56;
+  let BASE_DAY_WIDTH = 56;         // pode ser reduzido temporariamente para a impressão
+  const SCREEN_DAY_WIDTH = 56;     // valor original, usado na tela
+  const MIN_PRINT_DAY_WIDTH = 14;  // menor largura de dia aceitável no PDF
+  const NAME_COL_WIDTH = 260;      // precisa bater com .task-name-cell / .task-col-header no CSS
+  let isPrintRender = false;       // true enquanto o gantt está redesenhado para impressão
 
   const $ = (sel) => document.querySelector(sel);
   const ganttRoot = $("#ganttRoot");
@@ -510,11 +514,13 @@
       const last = Math.min(totalDays-1, Math.floor((new Date(lastMoment.getFullYear(),lastMoment.getMonth(),lastMoment.getDate())-start)/86400000));
       for(let d=first; d<=last; d++){
         dayLoad[d]++;
-        if(d===first) dayText[d] = Math.max(dayText[d], measureTextWidth(t.name, BAR_FONT)+26);
+        if(!isPrintRender && d===first) dayText[d] = Math.max(dayText[d], measureTextWidth(t.name, BAR_FONT)+26);
       }
     });
     for(let d=0; d<totalDays; d++){
-      widths[d] = Math.max(BASE_DAY_WIDTH, dayText[d], BASE_DAY_WIDTH + Math.max(0,dayLoad[d]-1)*18);
+      widths[d] = isPrintRender
+        ? BASE_DAY_WIDTH
+        : Math.max(BASE_DAY_WIDTH, dayText[d], BASE_DAY_WIDTH + Math.max(0,dayLoad[d]-1)*18);
     }
     return widths;
   }
@@ -788,38 +794,53 @@
     styleEl.textContent = "@page{ size: A4 "+pageOrientation()+"; margin: "+PRINT_MARGIN_MM+"mm; }";
   }
 
-  function clearGanttPrintScale(){
-    ganttRoot.style.zoom = "";
-    ganttRoot.style.transform = "";
-    ganttViewEl.style.height = "";
+  function currentFilteredTasks(chart){
+    const searchFiltered = chart.tasks.filter(t=>matchesSearch(t, currentSearch));
+    return searchFiltered.filter(t=> currentFilter==="todas" || computeStatus(t)===currentFilter);
   }
 
-  function applyGanttPrintScale(){
+  // Redesenha o gráfico do zero com a largura de dia reduzida para caber
+  // na folha impressa, em vez de "espremer" visualmente o que já estava
+  // desenhado (zoom/transform bagunçava a posição das barras e das setas).
+  function preparePrintGantt(){
     applyPageSizeStyle();
-    if(viewMode !== "gantt"){ clearGanttPrintScale(); return; }
+    if(viewMode !== "gantt") return;
 
-    clearGanttPrintScale();
-    const naturalWidth = ganttRoot.scrollWidth;
+    const chart = activeChart();
+    const filtered = currentFilteredTasks(chart);
+    if(filtered.length === 0) return;
+
+    const { start, end } = getRange(filtered);
+    const totalDays = Math.round((end-start)/86400000)+1;
+
     const pageWidthMM = pageOrientation()==="landscape" ? 297 : 210;
     const availablePx = (pageWidthMM - PRINT_MARGIN_MM*2) * MM_TO_PX;
-    if(naturalWidth <= availablePx) return;
+    const availableForDays = availablePx - NAME_COL_WIDTH;
 
-    const scale = availablePx / naturalWidth;
-    const supportsZoom = "zoom" in document.documentElement.style;
-    if(supportsZoom){
-      ganttRoot.style.zoom = scale;
-    }else{
-      ganttRoot.style.transformOrigin = "top left";
-      ganttRoot.style.transform = "scale("+scale+")";
-      ganttViewEl.style.height = (ganttRoot.scrollHeight*scale)+"px";
-    }
+    let printDayWidth = Math.floor(availableForDays / totalDays);
+    printDayWidth = Math.max(MIN_PRINT_DAY_WIDTH, Math.min(SCREEN_DAY_WIDTH, printDayWidth));
+
+    BASE_DAY_WIDTH = printDayWidth;
+    isPrintRender = true;
+    renderGantt(filtered, chart);
   }
 
-  window.addEventListener("beforeprint", applyGanttPrintScale);
-  window.addEventListener("afterprint", clearGanttPrintScale);
+  function restoreScreenGantt(){
+    if(!isPrintRender) return;
+    isPrintRender = false;
+    BASE_DAY_WIDTH = SCREEN_DAY_WIDTH;
+    rerender();
+  }
+
+  window.addEventListener("beforeprint", preparePrintGantt);
+  window.addEventListener("afterprint", restoreScreenGantt);
   if(printOrientationEl) printOrientationEl.addEventListener("change", applyPageSizeStyle);
 
-  $("#btnPdf").addEventListener("click",()=>{ applyGanttPrintScale(); window.print(); });
+  // não restaura logo após o window.print(): em vários navegadores essa
+  // chamada não bloqueia, e reverter cedo demais faria a impressão sair
+  // com a versão de tela (larga) em vez da versão ajustada para a folha.
+  // O evento "afterprint" cuida de restaurar quando a caixa de diálogo fecha.
+  $("#btnPdf").addEventListener("click",()=>{ preparePrintGantt(); window.print(); });
 
   // init
   loadState();
