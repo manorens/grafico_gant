@@ -10,141 +10,146 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
 <header class="app-header">
-  <div class="brand">
-    <div class="mark">
-      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsemepM4O72Q0HcTEWvtfb5uhexRSgEMfH-QeVAt0Xcg&s=10" alt="Logo">
-    </div>
-    <div class="brand-text">
-      <h1>Cronograma de Manutenção</h1>
-      <p>Componentes, atividades, responsáveis e prazos · salvo automaticamente neste computador</p>
-    </div>
-  </div>
-  <div class="actions">
-    <button class="btn btn-primary btn-sm" id="btnPdf">Baixar como PDF</button>
-  </div>
+<div class="brand">
+<div class="mark">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsemepM4O72Q0HcTEWvtfb5uhexRSgEMfH-QeVAt0Xcg&s=10" alt="Logo">
+</div>
+<div class="brand-text">
+<h1>Cronograma de Manutenção</h1>
+<p>Componentes, atividades, responsáveis e prazos · salvo automaticamente neste computador</p>
+</div>
+</div>
+<div class="actions">
+<div class="field-inline">
+<label for="printOrientation">Folha</label>
+<select id="printOrientation" class="select-sm">
+<option value="landscape" selected>Paisagem</option>
+<option value="portrait">Retrato</option>
+</select>
+</div>
+<button class="btn btn-primary btn-sm" id="btnPdf">Baixar como PDF</button>
+</div>
 </header>
 
 <div class="tabbar" id="tabbar"></div>
-
 <div class="dashboard" id="dashboard"></div>
 
 <main>
-  <section class="card panel">
-    <h2 id="formTitle">Nova atividade</h2>
-    <input type="hidden" id="taskId">
+<section class="card panel">
+<h2 id="formTitle">Nova atividade</h2>
+<input type="hidden" id="taskId">
 
-    <div class="field">
-      <label for="taskName">Nome da atividade</label>
-      <input type="text" id="taskName" placeholder="Ex.: Troca de rolamento do motor 3">
-    </div>
+<div class="field">
+<label for="taskName">Nome da atividade</label>
+<input type="text" id="taskName" placeholder="Ex.: Troca de rolamento do motor 3">
+</div>
 
-    <div class="field">
-      <label for="taskComponents">Componentes envolvidos</label>
-      <input type="text" id="taskComponents" placeholder="Ex.: Motor elétrico, redutor, painel de comando">
-      <div class="hint">Separe por vírgula quando houver mais de um componente.</div>
-    </div>
+<div class="field">
+<label for="taskComponents">Componentes envolvidos</label>
+<input type="text" id="taskComponents" placeholder="Ex.: Motor elétrico, redutor, painel de comando">
+<div class="hint">Separe por vírgula quando houver mais de um componente.</div>
+</div>
 
-    <div class="field">
-      <label>Tipo de manutenção</label>
-      <div class="swatches" id="swatches"></div>
-    </div>
+<div class="field">
+<label>Tipo de manutenção</label>
+<div class="swatches" id="swatches"></div>
+</div>
 
-    <div class="field">
-      <label for="taskResponsible">Responsável / equipe responsável</label>
-      <input type="text" id="taskResponsible" placeholder="Ex.: Equipe elétrica · João Silva (opcional)">
-    </div>
+<div class="field">
+<label for="taskResponsible">Responsável / equipe responsável</label>
+<input type="text" id="taskResponsible" placeholder="Ex.: Equipe elétrica · João Silva (opcional)">
+</div>
 
-    <div class="row2">
-      <div class="field">
-        <label for="taskStart">Início previsto</label>
-        <input type="date" id="taskStart">
-      </div>
-      <div class="field">
-        <label for="taskTime">Horário</label>
-        <input type="time" id="taskTime" value="08:00">
-      </div>
-    </div>
+<div class="row2">
+<div class="field">
+<label for="taskStart">Início previsto</label>
+<input type="date" id="taskStart">
+</div>
+<div class="field">
+<label for="taskTime">Horário</label>
+<input type="time" id="taskTime" value="08:00">
+</div>
+</div>
 
-    <div class="row2">
-      <div class="field">
-        <label for="taskDuration">Duração</label>
-        <input type="number" id="taskDuration" min="1" value="1">
-      </div>
-      <div class="field">
-        <label for="taskUnit">Unidade</label>
-        <select id="taskUnit">
-          <option value="horas">Horas</option>
-          <option value="dias">Dias</option>
-        </select>
-      </div>
-    </div>
+<div class="row2">
+<div class="field">
+<label for="taskDuration">Duração</label>
+<input type="number" id="taskDuration" min="1" value="1">
+</div>
+<div class="field">
+<label for="taskUnit">Unidade</label>
+<select id="taskUnit">
+<option value="horas">Horas</option>
+<option value="dias">Dias</option>
+</select>
+</div>
+</div>
 
-    <div class="field">
-      <label for="taskDeadline">Prazo de entrega</label>
-      <input type="date" id="taskDeadline">
-      <div class="hint">Opcional. Se não informado, o prazo considerado é o fim do período previsto.</div>
-    </div>
+<div class="field">
+<label for="taskDeadline">Prazo de entrega</label>
+<input type="date" id="taskDeadline">
+<div class="hint">Opcional. Se não informado, o prazo considerado é o fim do período previsto.</div>
+</div>
 
-    <div class="field">
-      <label for="taskProgress">Progresso (%)</label>
-      <input type="number" id="taskProgress" min="0" max="100" value="0">
-    </div>
+<div class="field">
+<label for="taskProgress">Progresso (%)</label>
+<input type="number" id="taskProgress" min="0" max="100" value="0">
+</div>
 
-    <div class="field">
-      <label for="taskDependency">Depende de</label>
-      <select id="taskDependency">
-        <option value="">Nenhuma atividade</option>
-      </select>
-      <div class="hint">Marca essa atividade como dependente: ela só deveria começar depois que a atividade escolhida terminar.</div>
-      <div class="warn-box" id="depWarning"></div>
-    </div>
+<div class="field">
+<label for="taskDependency">Depende de</label>
+<select id="taskDependency">
+<option value="">Nenhuma atividade</option>
+</select>
+<div class="hint">Marca essa atividade como dependente: ela só deveria começar depois que a atividade escolhida terminar.</div>
+<div class="warn-box" id="depWarning"></div>
+</div>
 
-    <div class="panel-buttons">
-      <button class="btn btn-primary" id="saveTask">Adicionar atividade</button>
-      <button class="btn btn-danger" id="cancelEdit">Cancelar</button>
-      <button class="btn btn-danger" id="deleteTask">Excluir</button>
-    </div>
-  </section>
+<div class="panel-buttons">
+<button class="btn btn-primary" id="saveTask">Adicionar atividade</button>
+<button class="btn btn-danger" id="cancelEdit">Cancelar</button>
+<button class="btn btn-danger" id="deleteTask">Excluir</button>
+</div>
+</section>
 
-  <section class="card content-card">
-    <div id="printTitle"></div>
-    <div id="printDetails"></div>
+<section class="card content-card">
+<div id="printTitle"></div>
+<div id="printDetails"></div>
 
-    <div class="toolbar">
-      <div class="toolbar-top">
-        <div class="view-switch" id="viewSwitch">
-          <button type="button" class="view-btn active" data-view="gantt">Gráfico de Gantt</button>
-          <button type="button" class="view-btn" data-view="list">Lista de atividades</button>
-        </div>
-        <input type="text" id="searchInput" class="search-input" placeholder="Buscar por atividade, componente ou responsável">
-      </div>
-      <div class="status-filters" id="statusFilters"></div>
-    </div>
+<div class="toolbar">
+<div class="toolbar-top">
+<div class="view-switch" id="viewSwitch">
+<button type="button" class="view-btn active" data-view="gantt">Gráfico de Gantt</button>
+<button type="button" class="view-btn" data-view="list">Lista de atividades</button>
+</div>
+<input type="text" id="searchInput" class="search-input" placeholder="Buscar por atividade, componente ou responsável">
+</div>
+<div class="status-filters" id="statusFilters"></div>
+</div>
 
-    <div class="gantt-scroll" id="ganttView">
-      <div class="gantt" id="ganttRoot"></div>
-    </div>
+<div class="gantt-scroll" id="ganttView">
+<div class="gantt" id="ganttRoot"></div>
+</div>
 
-    <div class="list-view" id="listView">
-      <table class="activities-table">
-        <thead>
-          <tr>
-            <th>Atividade</th>
-            <th>Componentes envolvidos</th>
-            <th>Tipo de manutenção</th>
-            <th>Responsável</th>
-            <th>Período previsto</th>
-            <th>Prazo de entrega</th>
-            <th>Progresso</th>
-            <th>Situação</th>
-          </tr>
-        </thead>
-        <tbody id="activitiesBody"></tbody>
-      </table>
-    </div>
-  </section>
+<div class="list-view" id="listView">
+<table class="activities-table">
+<thead>
+<tr>
+<th>Atividade</th>
+<th>Componentes envolvidos</th>
+<th>Tipo de manutenção</th>
+<th>Responsável</th>
+<th>Período previsto</th>
+<th>Prazo de entrega</th>
+<th>Progresso</th>
+<th>Situação</th>
+</tr>
+</thead>
+<tbody id="activitiesBody"></tbody>
+</table>
+</div>
+</section>
 </main>
 
 <script src="script.js"></script>

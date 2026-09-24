@@ -76,7 +76,15 @@ body{
 .app-header .mark img{width:100%;height:100%;object-fit:contain;}
 .brand-text h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.1px;}
 .brand-text p{margin:3px 0 0;font-size:12.5px;color:#c8dcf0;}
-.app-header .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+.app-header .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+.field-inline{display:flex;align-items:center;gap:7px;}
+.field-inline label{font-size:12px;color:#c8dcf0;font-weight:600;}
+.select-sm{
+  padding:7px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.08);color:#fff;font-size:12.5px;font-weight:600;
+  font-family:var(--font-sans);cursor:pointer;
+}
+.select-sm option{color:#16262f;}
 
 .btn{
   border:none;border-radius:8px;padding:9px 15px;font-size:13px;font-weight:600;
@@ -316,13 +324,28 @@ footer{text-align:center;color:var(--ink-soft);font-size:11.5px;padding:18px;}
 #printTitle{display:none;}
 #printDetails{display:none;}
 
+/* A orientação real da folha (paisagem/retrato) é definida dinamicamente
+   pelo script.js via um <style id="pageSizeStyle"> com a regra @page,
+   de acordo com o seletor "Folha" no cabeçalho. Isto aqui é só o fallback
+   inicial, caso o JS ainda não tenha rodado. */
+@page{
+  size: A4 landscape;
+  margin: 10mm;
+}
+
 @media print{
   .app-header,.tabbar,.panel,.toolbar,.dashboard{display:none !important;}
   body{background:#fff;}
   main{grid-template-columns:1fr;padding:0;max-width:none;}
   .content-card{margin-top:0;border:none;box-shadow:none;}
+
+  /* o script.js calcula um zoom/scale para o #ganttRoot inteiro caber
+     na largura útil da folha antes de imprimir (ver applyGanttPrintScale) */
   .gantt-scroll{overflow:visible;}
+  .gantt{transform-origin:top left;}
+  .task-row{page-break-inside:avoid;}
   .task-name-cell,.task-col-header,.month-corner,.gantt-header{position:static;}
+
   .list-view{max-height:none;overflow:visible;}
   #printTitle{display:block;padding:0 0 14px;font-size:18px;font-weight:700;color:#00263e;}
   #printTitle span{display:block;font-size:12px;font-weight:400;color:#5b6b76;margin-top:2px;}
@@ -367,36 +390,10 @@ footer{text-align:center;color:var(--ink-soft);font-size:11.5px;padding:18px;}
   .print-details-table tr{
     page-break-inside:avoid;
   }
-}
 
-@media print {
-  /* Define a página como Paisagem para caber a tabela inteira */
-  @page {
-    size: A4 landscape;
-    margin: 8mm;
-  }
-
-  /* Oculta botões, filtros ou menus que não precisam ir para o PDF */
-  .btn, button, nav, .filtros, header {
-    display: none !important;
-  }
-
-  /* Garante que o contêiner principal expanda 100% sem rolagem */
-  body, container, #cronograma-container {
-    width: 100% !important;
-    overflow: visible !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  /* Evita que tabelas ou blocos sejam cortados ao meio entre páginas */
-  table, .gantt-row {
-    page-break-inside: avoid;
-  }
-
-  /* Garante que as cores de fundo (como as barras do Gantt) apareçam no PDF */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+  /* garante que as cores de fundo (barras do Gantt, badges etc.) apareçam no PDF */
+  *{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
   }
 }

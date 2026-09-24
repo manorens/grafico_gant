@@ -50,6 +50,7 @@
   const ganttViewEl = $("#ganttView");
   const listViewEl = $("#listView");
   const activitiesBody = $("#activitiesBody");
+  const printOrientationEl = $("#printOrientation");
 
   let state = { charts: [], activeId: null };
   let selectedType = MAINT_TYPES[0].id;
@@ -769,46 +770,61 @@
     rerender();
   }
 
-  $("#btnPdf").addEventListener("click",()=>{ window.print(); });
+  /* ---------------- impressão / PDF ---------------- */
+  const PRINT_MARGIN_MM = 10; // precisa bater com a margem usada em @page no CSS
+  const MM_TO_PX = 96/25.4;
+
+  function pageOrientation(){
+    return printOrientationEl ? printOrientationEl.value : "landscape";
+  }
+
+  function applyPageSizeStyle(){
+    let styleEl = document.getElementById("pageSizeStyle");
+    if(!styleEl){
+      styleEl = document.createElement("style");
+      styleEl.id = "pageSizeStyle";
+      document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = "@page{ size: A4 "+pageOrientation()+"; margin: "+PRINT_MARGIN_MM+"mm; }";
+  }
+
+  function clearGanttPrintScale(){
+    ganttRoot.style.zoom = "";
+    ganttRoot.style.transform = "";
+    ganttViewEl.style.height = "";
+  }
+
+  function applyGanttPrintScale(){
+    applyPageSizeStyle();
+    if(viewMode !== "gantt"){ clearGanttPrintScale(); return; }
+
+    clearGanttPrintScale();
+    const naturalWidth = ganttRoot.scrollWidth;
+    const pageWidthMM = pageOrientation()==="landscape" ? 297 : 210;
+    const availablePx = (pageWidthMM - PRINT_MARGIN_MM*2) * MM_TO_PX;
+    if(naturalWidth <= availablePx) return;
+
+    const scale = availablePx / naturalWidth;
+    const supportsZoom = "zoom" in document.documentElement.style;
+    if(supportsZoom){
+      ganttRoot.style.zoom = scale;
+    }else{
+      ganttRoot.style.transformOrigin = "top left";
+      ganttRoot.style.transform = "scale("+scale+")";
+      ganttViewEl.style.height = (ganttRoot.scrollHeight*scale)+"px";
+    }
+  }
+
+  window.addEventListener("beforeprint", applyGanttPrintScale);
+  window.addEventListener("afterprint", clearGanttPrintScale);
+  if(printOrientationEl) printOrientationEl.addEventListener("change", applyPageSizeStyle);
+
+  $("#btnPdf").addEventListener("click",()=>{ applyGanttPrintScale(); window.print(); });
 
   // init
   loadState();
   renderSwatches();
   resetForm();
+  applyPageSizeStyle();
   renderAll();
 })();
-
-function exportarPDF() {
-  const elemento = document.getElementById('seu-container-do-cronograma'); // Substitua pelo ID da sua tabela/gantt
-
-  // Salva os estilos originais
-  const estiloOriginalOverflow = elemento.style.overflow;
-  const estiloOriginalWidth = elemento.style.width;
-
-  // Força o contêiner a mostrar todo o conteúdo sem barras de rolagem
-  elemento.style.overflow = 'visible';
-  elemento.style.width = 'auto';
-
-  const opcoes = {
-    margin: [10, 10, 10, 10],
-    filename: 'cronograma-manutencao.pdf',
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { 
-      scale: 2,           // Melhora a resolução do PDF
-      scrollX: 0, 
-      scrollY: 0,
-      useCORS: true 
-    },
-    jsPDF: { 
-      unit: 'mm', 
-      format: 'a4', 
-      orientation: 'landscape' // Define orientação Paisagem para caber todas as colunas
-    }
-  };
-
-  // Gera o PDF e restaura a tela original
-  html2pdf().set(opcoes).from(elemento).save().then(() => {
-    elemento.style.overflow = estiloOriginalOverflow;
-    elemento.style.width = estiloOriginalWidth;
-  });
-}
